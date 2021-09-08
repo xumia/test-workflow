@@ -4,7 +4,10 @@
 # https://aka.ms/yaml
 
 trigger: none
-pr: true
+pr:
+  branches:
+    include:
+      - master
 
 variables:
   COMMIT_ID: e1e81264dc1d6362c9c3ee3b7752ad9e035c4a09
