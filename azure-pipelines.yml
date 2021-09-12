@@ -30,7 +30,7 @@ stages:
       displayName: "Test2"
     - bash: |
         echo This script could use $SYSTEM_ACCESSTOKEN
-        body='[
+        data='[
           {
             "op": "add",
             "path": "/Test",
@@ -41,9 +41,10 @@ stages:
         uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds/$(Build.BuildId)/properties?api-version=6.0-preview.1"
         header1="Authorization: Basic $base64pat"
         header2="Content-Type:application/json"
+        header3="Content-Type:application/json-patch+json"
         echo "uri=$uri"
         curl -X GET -H "$header1" -H "$header2" "$uri"
-        curl -X PATCH -H "$header1" -H "$header2" "$uri"
+        curl -X PATCH -H "$header1" -H "$header3" -d "$data" "$uri"
         curl -X GET -H "$header1" -H "$header2" "$uri"
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
