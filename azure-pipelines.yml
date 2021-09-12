@@ -28,6 +28,22 @@ stages:
     - script: |
         echo Test2
       displayName: "Test2"
-    - bash: echo This script could use $SYSTEM_ACCESSTOKEN
+    - bash: |
+        echo This script could use $SYSTEM_ACCESSTOKEN
+        body='[
+          {
+            "op": "add",
+            "path": "/Test",
+            "value": "Test1"
+          }
+        ]'
+        base64pat=$(printf "%s"":$SYSTEM_ACCESSTOKEN" | base64)
+        uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds/$(Build.BuildId)/properties?api-version=6.0-preview.1"
+        header1="Authorization: Basic $base64pat"
+        header2="Content-Type:application/json"
+        echo "uri=$uri"
+        curl -X GET -H "$header1" -H "$header2" "$uri"
+        curl -X PATCH -H "$header1" -H "$header2" "$uri"
+        curl -X GET -H "$header1" -H "$header2" "$uri"
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
