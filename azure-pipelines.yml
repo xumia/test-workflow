@@ -43,8 +43,11 @@ stages:
         header2="Content-Type:application/json"
         header3="Content-Type:application/json-patch+json"
         echo "uri=$uri"
-        curl -X GET -H "$header1" -H "$header2" "$uri"
-        curl -X PATCH -H "$header1" -H "$header3" -d "$data" "$uri"
-        curl -X GET -H "$header1" -H "$header2" "$uri"
+        curl -X GET -H "$header1" -H "$header2" "$uri" -o test
+        cat test
+        curl -X PATCH -H "$header1" -H "$header3" -d "$data" "$uri" -o test
+        cat test
+        curl -X GET -H "$header1" -H "$header2" "$uri" -o test
+        cat test
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
