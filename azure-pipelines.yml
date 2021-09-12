@@ -47,7 +47,13 @@ stages:
         echo "header2=$header2"
         echo "header3=$header3"
         curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$uri" 2>test
+        echo "ret=$?"
+        cat test
         curl -X PATCH --http1.1 -S -H "$header1" -H "$header3" -d "$data" "$uri" 2>test
+        echo "ret=$?"
+        cat test
         curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$uri" 2>test
+        echo "ret=$?"
+        cat test
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
