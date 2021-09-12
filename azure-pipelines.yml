@@ -39,7 +39,7 @@ stages:
         ]'
         base64pat=$(printf "%s"":$SYSTEM_ACCESSTOKEN" | base64)
         uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds/$(Build.BuildId)/properties?api-version=6.0-preview.1"
-        header1="Authorization: Basic $base64pat"
+        header1="Authorization: Bearer $SYSTEM_ACCESSTOKEN"
         header2="Content-Type:application/json"
         header3="Content-Type:application/json-patch+json"
         echo "uri=$uri"
