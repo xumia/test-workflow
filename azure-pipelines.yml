@@ -62,17 +62,16 @@ stages:
         repoName=$(echo "$repoUri" | awk -F/ '{print $(NF)}' | sed 's/.git$//')
         repoOwner=$(echo "$repoUri" | awk -F/ '{print $(NF-1)}')
         query_build_uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/definitions?name=$definitionName&\$top=1&api-version=6.0"
-        pullRequestId=$(curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$query_build_uri" | jq '.value | first | .id')
-        echo "pullRequestId=$pullRequestId"
-        cat test
-        parameters=$(python -c "import json;print(json.dumps({'pullRequestId':'334',
+        definitionId=$(curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$query_build_uri" | jq '.value | first | .id')
+        echo "definitionId=$definitionId"
+        parameters=$(python -c "import json;print(json.dumps({'pullRequestId':'$(System.PullRequest.pullRequestNumber)',
              'owner':'$repoOwner',
              'repository':'$repoName',
              'comment':'My comment'}))")
         build_request=$(python -c "import json;parameters=json.dumps({'pullRequestId':'$(System.PullRequest.pullRequestNumber)',
              'owner':'$repoOwner',
              'repository':'$repoName',
-             'comment':'My comment'});print(json.dumps({'definition':{'name':'$definitionName'},
+             'comment':'My comment'});print(json.dumps({'definition':{'id':'$definitionId'},
              'parameters':parameters}))")
         echo "build_request=$build_request"
         build_uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds?api-version=6.0"
