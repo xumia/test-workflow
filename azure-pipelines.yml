@@ -64,7 +64,7 @@ stages:
              'owner':'$repoOwner',
              'repository':'$repoName',
              'comment':'My comment'}))")
-        build_request=$(python -c "import json;parameters=json.dumps({'pullRequestId':'1',
+        build_request=$(python -c "import json;parameters=json.dumps({'pullRequestId':'$(System.PullRequest.pullRequestNumber)',
              'owner':'$repoOwner',
              'repository':'$repoName',
              'comment':'My comment'});print(json.dumps({'definition':{'name':'$definitionName'},
