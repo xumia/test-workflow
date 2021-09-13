@@ -62,6 +62,7 @@ stages:
         repoOwner=$(echo "$repoUri" | awk -F/ '{print $(NF-1)}')
         query_build_uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/definitions?name=$definitionName&\$top=1&api-version=6.0"
         curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$query_build_uri" 2>test
+        echo something
         cat test
         parameters=$(python -c "import json;print(json.dumps({'pullRequestId':'1',
              'owner':'$repoOwner',
