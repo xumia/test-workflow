@@ -72,5 +72,6 @@ stages:
         echo "build_request=$build_request"
         build_uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds?api-version=6.0"
         curl -X POST --http1.1 -S -H "$header1" -H "$header2" -d "$build_request" "$build_uri" 2>test
+        cat test
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
