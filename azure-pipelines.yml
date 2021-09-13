@@ -60,15 +60,15 @@ stages:
         repoUri="$(System.PullRequest.SourceRepositoryURI)"
         repoName=$(echo "$repoUri" | awk -F/ '{print $(NF)}' | sed 's/.git$//')
         repoOwner=$(echo "$repoUri" | awk -F/ '{print $(NF-1)}')
-        build_request="{
-          \"definition\":{\"name\":\"$definitionName\"},
-          \"parameters\":{
-            \"pullRequestId\":\"$(System.PullRequest.PullRequestId)\",
-            \"owner\":\"$repoOwner\",
-            \"repository\":\"$repoName\",
-            \"comment\":\"My comment\"
-          }
-        }"
+        parameters=$(python -c "import json;print(json.dumps({'pullRequestId':'1',
+             'owner':'$repoOwner',
+             'repository':'$repoName',
+             'comment':'My comment'}))")
+        build_request=$(python -c "import json;parameters=json.dumps({'pullRequestId':'1',
+             'owner':'$repoOwner',
+             'repository':'$repoName',
+             'comment':'My comment'});print(json.dumps({'definition':{'name':'$definitionName'},
+             'parameters':parameters}))")
         echo "build_request=$build_request"
         build_uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds?api-version=6.0"
         curl -X POST --http1.1 -S -H "$header1" -H "$header2" -d "$build_request" "$build_uri" 2>test
