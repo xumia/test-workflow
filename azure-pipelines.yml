@@ -26,7 +26,8 @@ stages:
     - checkout: self
       displayName: "Checkout test-workflow"
     - script: |
-        echo Test2
+        echo "Build.SourceVersion=$(Build.SourceVersion)"
+        echo "Build.SourceVersionMessage=$(Build.SourceVersionMessage)"
       displayName: "Test2"
     - bash: |
         sudo apt-get install -y jq
