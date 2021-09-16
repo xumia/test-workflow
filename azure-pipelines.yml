@@ -4,7 +4,10 @@
 # https://aka.ms/yaml
 
 trigger: none
-pr: none
+pr:
+  branches:
+    include:
+      - master
 
 variables:
   COMMIT_ID: e1e81264dc1d6362c9c3ee3b7752ad9e035c4a09
@@ -23,5 +26,61 @@ stages:
     - checkout: self
       displayName: "Checkout test-workflow"
     - script: |
-        echo Test2
+        echo "Build.SourceVersion=$(Build.SourceVersion)"
+        echo "Build.SourceVersionMessage=$(Build.SourceVersionMessage)"
+        echo "system.pullRequest.sourceCommitId=$(system.pullRequest.sourceCommitId)"
+        echo "System.JobName=$(System.JobName)"
+        echo "Agent.JobName=$(Agent.JobName)"
+        echo "System.JobId=$(System.JobId)"
       displayName: "Test2"
+    - bash: |
+        sudo apt-get install -y jq
+        echo This script could use $SYSTEM_ACCESSTOKEN
+        data='[
+          {
+            "op": "add",
+            "path": "/Test",
+            "value": "Test1"
+          }
+        ]'
+        base64pat=$(printf "%s"":$SYSTEM_ACCESSTOKEN" | base64)
+        uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds/$(Build.BuildId)/properties?api-version=6.0-preview.1"
+        header1="Authorization: Bearer $SYSTEM_ACCESSTOKEN"
+        header2="Content-Type:application/json"
+        header3="Content-Type:application/json-patch+json"
+        echo "uri=$uri"
+        echo "header1=$header1"
+        echo "header2=$header2"
+        echo "header3=$header3"
+        curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$uri" 2>test
+        echo "ret=$?"
+        cat test
+        curl -X PATCH --http1.1 -S -H "$header1" -H "$header3" -d "$data" "$uri" 2>test
+        echo "ret=$?"
+        cat test
+        curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$uri" 2>test
+        echo "ret=$?"
+        cat test
+        definitionName="xumia.sonic-pipelines"
+        provider="$(Build.Repository.Provider)"
+        repoUri="$(System.PullRequest.SourceRepositoryURI)"
+        repoName=$(echo "$repoUri" | awk -F/ '{print $(NF)}' | sed 's/.git$//')
+        repoOwner=$(echo "$repoUri" | awk -F/ '{print $(NF-1)}')
+        query_build_uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/definitions?name=$definitionName&\$top=1&api-version=6.0"
+        definitionId=$(curl -X GET --http1.1 -S -H "$header1" -H "$header2" "$query_build_uri" | jq '.value | first | .id')
+        echo "definitionId=$definitionId"
+        parameters=$(python -c "import json;print(json.dumps({'pullRequestId':'$(System.PullRequest.pullRequestNumber)',
+             'owner':'$repoOwner',
+             'repository':'$repoName',
+             'comment':'My comment'}))")
+        build_request=$(python -c "import json;parameters=json.dumps({'pullRequestId':'$(System.PullRequest.pullRequestNumber)',
+             'owner':'$repoOwner',
+             'repository':'$repoName',
+             'comment':'My comment'});print(json.dumps({'definition':{'id':'$definitionId'},
+             'parameters':parameters}))")
+        echo "build_request=$build_request"
+        build_uri="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds?api-version=6.0"
+        curl -X POST --http1.1 -S -H "$header1" -H "$header2" -d "$build_request" "$build_uri" 2>test
+        cat test
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
