@@ -29,6 +29,9 @@ stages:
         echo "Build.SourceVersion=$(Build.SourceVersion)"
         echo "Build.SourceVersionMessage=$(Build.SourceVersionMessage)"
         echo "system.pullRequest.sourceCommitId=$(system.pullRequest.sourceCommitId)"
+        echo "System.JobName=$(System.JobName)"
+        echo "Agent.JobName=$(Agent.JobName)"
+        echo "System.JobId=$(System.JobId)"
       displayName: "Test2"
     - bash: |
         sudo apt-get install -y jq
