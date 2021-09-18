@@ -4,11 +4,10 @@
 # https://aka.ms/yaml
 
 trigger: none
-pr: none
-
-variables:
-  COMMIT_ID: e1e81264dc1d6362c9c3ee3b7752ad9e035c4a09
-  ENDPOINT: build
+pr:
+  branches:
+    include:
+      - master
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -17,11 +16,159 @@ stages:
   pool:
     vmImage: 'ubuntu-20.04'
   jobs:
-  - job: Test1
-    displayName: Test1
+  - job: Build0
+    displayName: Build0
     steps:
     - checkout: self
-      displayName: "Checkout test-workflow"
+      displayName: 'Checkout test-workflow'
+  - job: Build
+    displayName: Build
+    steps:
+    - checkout: self
+      displayName: 'Checkout test-workflow'
     - script: |
-        echo Test2
-      displayName: "Test2"
+        sudo apt-get install -y golang-go
+        sudo apt-get install -y gcovr
+        sudo apt-get install python3-pip
+        sudo pip3 install pytest pytest-cov
+        cat $(which pytest)
+        pytest --version
+        pytest --help
+      displayName: 'Install packages'
+    - script: |
+        set -ex
+        curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        sudo apt-add-repository https://packages.microsoft.com/ubuntu/20.04/prod
+        sudo apt-get update
+        sudo apt-get install -y dotnet-sdk-5.0
+      displayName: 'Install .NET CORE'
+    - script: |
+        cd cpp
+        ./build.sh
+        gcovr -r $(pwd) --exclude-unreachable-branches  -x -o coverage.xml
+        mkdir -p htmlcov
+        gcovr -r $(pwd) --html --html-details -o htmlcov/index.html
+      displayName: 'Build cpp'
+    - script: |
+        cd python
+        python3 setup.py bdist_wheel
+        pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml
+      displayName: 'Build python'
+    - script: |
+        cd golang
+        go get github.com/axw/gocov/...
+        go get github.com/AlekSi/gocov-xml
+        export PATH=$PATH:$(go env GOPATH)/bin
+        go test -race -coverprofile=coverage.txt -covermode=atomic
+        gocov convert coverage.txt | gocov-xml -source $(pwd) > coverage.xml
+        mkdir -p htmlcov
+        go tool cover -html=coverage.txt -o htmlcov/coverage.html
+      displayName: 'Build golang'
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: '$(System.DefaultWorkingDirectory)/python/junit/test-results.xml'
+        testRunTitle: Python
+        failTaskOnFailedTests: true
+      condition: succeededOrFailed()
+      displayName: 'Publish Python test results'
+    - script: |
+        # A workaround to merge converage files for full coverage
+        sudo apt-get install npm
+        npm install cobertura-merge
+      displayName: 'Install cobertura-merge'
+    - script: |
+        node_root=$(npm list --depth=0 2>/dev/null | head -n 1)
+        $node_root/node_modules/.bin/cobertura-merge -o coverage.xml cpp=cpp/coverage.xml python=python/coverage.xml golang=golang/coverage.xml
+      displayName: "Merge coverage"
+      condition: succeeded()
+      continueOnError: true
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/python/coverage.xml'
+      displayName: 'Publish coverage'
+    - ${{ if and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['DIFF_COVER_DISABLE'], 'true')) }}:
+      - script: |
+          sudo pip install diff-cover
+          target_branch=$(System.PullRequest.TargetBranch)
+          compare_branch=origin/${target_branch#refs/heads/}
+          mkdir -p .coverage/htmlcov
+          converage_files="$DIFF_COVER_COVERAGE_FILES"
+          if [ -z "$converage_files" ]; then
+            converage_files="$(find . -maxdepth 2 -name coverage.xml)"
+          fi
+          if [ -z "$converage_files" ]; then
+            echo "Skipped, the coverage files not found"
+            exit 0
+          fi
+          diff-cover $converage_files --ignore-unstaged --compare-branch=$compare_branch --html-report=.coverage/htmlcov/index.html
+          diff-cover $converage_files --ignore-unstaged --compare-branch=$compare_branch --json-report=.coverage/diff-cover.json
+          echo "##vso[task.setvariable variable=disable.coverage.autogenerate;]true"
+          echo "##vso[task.setvariable variable=has.coverage.files;]true"
+        displayName: "Show diff coverage"
+        continueOnError: true
+      - ${{ if ne(variables['DIFF_COVER_CHECK_DISABLE'], 'true') }}:
+        - task: PythonScript@0
+          inputs:
+            scriptSource: inline
+            script: |
+              import json, requests, os, datetime
+              cover = {}
+              checkThreshold=os.environ.get('DIFF_COVER_CHECK_THRESHOLD')
+              if not checkThreshold:
+                checkThreshold = '0'
+              threshold = 0
+              try:
+                threshold = float(checkThreshold)
+              except:
+                print('Failed to parse the DIFF_COVER_CHECK_THRESHOLD={0} to float'.format(checkThreshold))
+                exit(0)
+              with open(".coverage/diff-cover.json", "r") as f:
+                cover=json.load(f)
+              properties = {
+                'pullRequestId': $(System.PullRequest.PullRequestNumber),
+                'repoUri': '$(System.PullRequest.SourceRepositoryURI)',
+                'targetBranch': '$(System.PullRequest.TargetBranch)',
+                'sourceCommitId': '$(system.pullRequest.sourceCommitId)',
+                'sourceVersion': '$(Build.SourceVersion)',
+                'jobName': '$(Agent.JobName)',
+                'jobId': '$(System.JobId)',
+                'definitionName': '$(Build.DefinitionName)',
+                'stageName': '$(System.StageName)',
+                'jobAttempt': '$(System.JobAttempt)',
+                'timestamp': datetime.datetime.now().isoformat(),
+                'cover.threshold': threshold,
+                'cover.num_lines': cover.get("total_num_lines"),
+                'cover.num_violations': cover.get("total_num_violations"),
+                'cover.percent_covered': cover.get("total_percent_covered"),
+              }
+              data = [
+                {
+                  'op': 'add',
+                  'path': '/codediff.{0}'.format('$(Agent.JobName)'),
+                  'value': json.dumps(properties)
+                }
+              ]
+              url="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds/$(Build.BuildId)/properties?api-version=6.0-preview.1"
+              authentication='Bearer {0}'.format(os.environ.get('SYSTEM_ACCESSTOKEN'))
+              headers = {"Authorization":authentication, "Content-Type":"application/json-patch+json"}
+              response = requests.patch(url, headers=headers, data=json.dumps(data))
+              if (response.status_code == 200):
+                print('The request was succeeded.')
+              else:
+                print('The request was failed, with error: {0}'.format(response.status_code))
+                print('The failure reason is {0}'.format(response.reason))
+          displayName: 'Update Build coverage'
+          condition: eq(variables['has.coverage.files'], 'true')
+          continueOnError: true
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      - ${{ if ne(variables['DIFF_COVER_COVERAGE_REPORT_DISABLE'], 'true') }}:
+        - task: PublishCodeCoverageResults@1
+          inputs:
+            codeCoverageTool: Cobertura
+            summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
+            reportDirectory: '$(System.DefaultWorkingDirectory)/diff-cover/htmlcov'
+          displayName: 'Publish coverage'
+          condition: eq(variables['has.coverage.files'], 'true')
+          continueOnError: true
