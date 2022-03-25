@@ -25,4 +25,5 @@ stages:
     - script: |
         echo Test2
         export -p
+        make -f Makefile.test all
       displayName: "Test2"
