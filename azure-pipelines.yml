@@ -24,4 +24,5 @@ stages:
       displayName: "Checkout test-workflow"
     - script: |
         echo Test2
+        export -p
       displayName: "Test2"
