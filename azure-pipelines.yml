@@ -33,5 +33,5 @@ stages:
         export -p
         make -f Makefile.test all
         exit 1
-      retryCountOnTaskFailure: ''
+      retryCountOnTaskFailure: '1'
       displayName: "Test2"
