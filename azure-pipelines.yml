@@ -16,7 +16,8 @@ parameters:
 - name: retry_count
   type: number
   default: 0
-
+variables:
+  RETRY_COUNT: 1
 stages:
 - stage: Build
   pool:
