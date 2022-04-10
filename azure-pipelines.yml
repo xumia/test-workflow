@@ -26,4 +26,6 @@ stages:
         echo Test2
         export -p
         make -f Makefile.test all
+        exit 1
+      retryCountOnTaskFailure: 1
       displayName: "Test2"
