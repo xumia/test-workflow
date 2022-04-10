@@ -9,6 +9,7 @@ pr: none
 variables:
   COMMIT_ID: e1e81264dc1d6362c9c3ee3b7752ad9e035c4a09
   ENDPOINT: build
+  RETRY_COUNT: 1
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -16,8 +17,7 @@ parameters:
 - name: retry_count
   type: number
   default: 0
-variables:
-  RETRY_COUNT: 1
+
 stages:
 - stage: Build
   pool:
