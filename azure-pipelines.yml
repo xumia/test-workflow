@@ -21,6 +21,7 @@ stages:
     displayName: Test1
     steps:
     - checkout: self
+      retryCountOnTaskFailure: 1
       displayName: "Checkout test-workflow"
     - script: |
         echo Test2
