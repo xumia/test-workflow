@@ -12,6 +12,11 @@ variables:
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
+parameters:
+- name: retry_count
+  type: number
+  default: 0
+
 stages:
 - stage: Build
   pool:
@@ -28,5 +33,5 @@ stages:
         export -p
         make -f Makefile.test all
         exit 1
-      retryCountOnTaskFailure: '$(RETRY_COUNT)'
+      retryCountOnTaskFailure: ${{ parameters.retry_count }}
       displayName: "Test2"
