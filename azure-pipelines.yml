@@ -28,5 +28,5 @@ stages:
         export -p
         make -f Makefile.test all
         exit 1
-      retryCountOnTaskFailure: $(RETRY_COUNT)
+      retryCountOnTaskFailure: '$(RETRY_COUNT)'
       displayName: "Test2"
