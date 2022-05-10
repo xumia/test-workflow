@@ -29,7 +29,7 @@ stages:
     displayName: Test1
     steps:
     - script: |
-        echo "##vso[task.setvariable variable=triggerMain]True"
+        echo "##vso[task.setvariable variable=triggerMain]testValue"
       displayName: "Set variables"
     - task: TriggerBuild@4
       inputs:
