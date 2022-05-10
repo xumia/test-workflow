@@ -30,6 +30,7 @@ stages:
     steps:
     - script: |
         echo "##vso[task.setvariable variable=triggerBuildId]$(BUILD_BUILDID)"
+        echo "##vso[task.setvariable variable=TestSuite]TestSuite"
       displayName: "Set variables"
     - task: TriggerBuild@4
       inputs:
@@ -49,6 +50,7 @@ stages:
         dependentOnFailedBuildCondition: false
         checkbuildsoncurrentbranch: false
         failTaskIfConditionsAreNotFulfilled: false
+        buildParameters: 'TestSuite: APP-API'
     - checkout: self
       retryCountOnTaskFailure: 1
       displayName: "Checkout test-workflow"
