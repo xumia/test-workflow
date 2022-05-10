@@ -40,5 +40,6 @@ stages:
         echo Test2
         echo TestSuite=$(TestSuite)
         echo testParameter1=${{ convertToJson(parameters.testParameter1) }}
+        echo testParameter2=${{ convertToJson(parameters.testParameter2) }}
         set
       displayName: "Test2"
