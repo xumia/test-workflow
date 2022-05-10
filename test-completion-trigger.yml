@@ -16,6 +16,10 @@ variables:
   COMMIT_ID: e1e81264dc1d6362c9c3ee3b7752ad9e035c4a09
   ENDPOINT: build
   TestVar1: 0
+parameters:
+- name: testParameter1
+  type: string
+  default: "0"
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -32,5 +36,6 @@ stages:
     - script: |
         echo Test2
         echo TestSuite=$(TestSuite)
+        echo testParameter1=${{ parameters.testParameter1 }}
         set
       displayName: "Test2"
