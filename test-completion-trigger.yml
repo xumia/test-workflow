@@ -30,5 +30,6 @@ stages:
       displayName: "Checkout test-workflow"
     - script: |
         echo Test2
+        echo TestSuite=$(TestSuite)
         set
       displayName: "Test2"
