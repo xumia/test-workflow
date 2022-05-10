@@ -51,6 +51,7 @@ stages:
         checkbuildsoncurrentbranch: false
         failTaskIfConditionsAreNotFulfilled: false
         buildParameters: 'TestSuite: APP-API,TestVar1:testValue1,testParameter1:testPar1'
+        templateParameters: 'TestSuite: APP-API,TestVar1:testValue1,testParameter1:testPar1'
     - checkout: self
       retryCountOnTaskFailure: 1
       displayName: "Checkout test-workflow"
