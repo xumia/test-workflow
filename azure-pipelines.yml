@@ -35,7 +35,7 @@ stages:
     - task: TriggerBuild@4
       inputs:
         definitionIsInCurrentTeamProject: true
-        buildDefinition: '328'
+        buildDefinition: 'test-completion-trigger'
         queueBuildForUserThatTriggeredBuild: true
         ignoreSslCertificateErrors: false
         useSameSourceVersion: false
