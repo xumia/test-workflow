@@ -40,7 +40,7 @@ stages:
       inputs:
         definitionIsInCurrentTeamProject: false
         tfsServer: $(System.CollectionUri)
-        teamProject: build
+        teamProject: internal
         buildDefinition: 'test-completion-trigger'
         queueBuildForUserThatTriggeredBuild: true
         ignoreSslCertificateErrors: false
