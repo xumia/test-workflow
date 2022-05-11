@@ -40,7 +40,8 @@ stages:
       inputs:
         definitionIsInCurrentTeamProject: false
         tfsServer: $(System.CollectionUri)
-        teamProject: internal
+        # internal: https://dev.azure.com/mssonic/_apis/projects?api-version=5.0
+        teamProject: 12b9cbf4-b1d3-4768-8e49-669345c32e5d
         buildDefinition: 'test-completion-trigger'
         queueBuildForUserThatTriggeredBuild: true
         ignoreSslCertificateErrors: false
