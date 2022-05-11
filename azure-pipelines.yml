@@ -39,6 +39,7 @@ stages:
     - task: TriggerBuild@4
       inputs:
         definitionIsInCurrentTeamProject: false
+        tfsServer: $(System.CollectionUri)
         teamProject: build
         buildDefinition: 'test-completion-trigger'
         queueBuildForUserThatTriggeredBuild: true
