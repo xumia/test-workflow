@@ -38,7 +38,8 @@ stages:
       displayName: "Set variables"
     - task: TriggerBuild@4
       inputs:
-        definitionIsInCurrentTeamProject: true
+        definitionIsInCurrentTeamProject: false
+        teamProject: build
         buildDefinition: 'test-completion-trigger'
         queueBuildForUserThatTriggeredBuild: true
         ignoreSslCertificateErrors: false
