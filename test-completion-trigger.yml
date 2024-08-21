@@ -36,14 +36,15 @@ stages:
     steps:
     - checkout: self
       displayName: "Checkout test-workflow"
-    - task: ManifestGeneratorTask@0
-      inputs:
-        BuildDropPath: '$(Build.SourcesDirectory)'
-        ManifestDirPath: '$(Build.ArtifactStagingDirectory)/sbom'
     - script: |
         echo Test2
         echo TestSuite=$(TestSuite)
         echo testParameter1=${{ convertToJson(parameters.testParameter1) }}
         echo testParameter2='${{ convertToJson(parameters.testParameter2) }}'
+        mkdir $(Build.ArtifactStagingDirectory)/sbom
         set
       displayName: "Test2"
+    - task: ManifestGeneratorTask@0
+      inputs:
+        BuildDropPath: '$(Build.SourcesDirectory)'
+        ManifestDirPath: '$(Build.ArtifactStagingDirectory)/sbom'
